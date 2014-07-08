@@ -116,7 +116,7 @@ class NagiosRunit(object):
         except Exception:
             pass
 
-    def handler_signal(self, _):
+    def handler_signal(self, signum, frame):
         """ Handle signals, resp. set event """ 
         self._stop.set()
 
