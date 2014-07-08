@@ -46,12 +46,6 @@ CMD_GET_RESULTS = [CHECK_MULTI_BIN,
         '-r',
         '256' ]
 
-# Yes, we want to crash loud if some of those aren't provided
-SHARED_KEY = os.environ['NAGIOS_SHARED_KEY']
-NAGIOS_HOST = os.environ['NAGIOS_HOST']
-CONFIG_URI = os.environ['NAGIOS_CONFIG_URI']
-RESULTS_URI = os.environ['NAGIOS_RESULTS_URI']
-
 # MyPie {{{
 class MyPie(pyinotify.ProcessEvent):
     """ Class to Process Inotify Events """
@@ -226,6 +220,7 @@ class NagiosSender(object):
 
     def run(self):
         """ Go, go, go! """
+        logging.debug('Command %s', " ".join(self.command))
         stdin = self.run_command(self.command)
         if stdin is None:
             # This is to keep cron quiet
@@ -247,6 +242,7 @@ class NagiosSender(object):
         except Exception:
             status_code = 0
 
+        logging.debug('Status code is %i', status_code)
         # TODO - What are we going to do on error?
         if status_code != 200:
             # FAIL
@@ -313,7 +309,13 @@ def main():
         log_level = logging.DEBUG
 
     logging.basicConfig(format=LOG_FORMAT, stream=sys.stdout)
-    logging.getLogger('nagios-sender').setLevel(log_level)
+    logging.getLogger().setLevel(log_level)
+
+    # Yes, we want to crash loud if some of those aren't provided
+    SHARED_KEY = os.environ['NAGIOS_SHARED_KEY']
+    NAGIOS_HOST = os.environ['NAGIOS_HOST']
+    CONFIG_URI = os.environ['NAGIOS_CONFIG_URI']
+    RESULTS_URI = os.environ['NAGIOS_RESULTS_URI']
 
     if args.action == 'send_config':
         nagios_sender = NagiosSender()
