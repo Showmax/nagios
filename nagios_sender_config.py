@@ -2,7 +2,6 @@ import logging
 from socket import getfqdn
 
 LOG_LEVEL = logging.ERROR
-LOG_FILE = "/dev/null"
 
 SHARED_KEY = ""
 

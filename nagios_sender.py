@@ -121,19 +121,14 @@ class NagiosSendResults(NagiosSender):
 
 def main():
     """ main function - setup logging and launch instance of NagiosSender """
-    logstream = logging.StreamHandler()
-    logfile = logging.handlers.RotatingFileHandler(config.LOG_FILE,
-            maxBytes=10240000,
-            backupCount=5)
-
+    logstream = logging.StreamHandler(stream=sys.stdout)
     log_fmt = "%(asctime)s %(levelname)-10s %(threadName)-11s %(message)s"
     formatter = logging.Formatter(log_fmt)
-    logstream.setFormatter(formatter)
-    logfile.setFormatter(formatter)
 
-    logger = logging.getLogger()
+    logstream.setFormatter(formatter)
+
+    logger = logging.getLogger('nagios-sender')
     logger.addHandler(logstream)
-    logger.addHandler(logfile)
     logger.setLevel(config.LOG_LEVEL)
 
     if len(sys.argv) != 2:
