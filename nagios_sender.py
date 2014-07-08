@@ -97,11 +97,16 @@ class NagiosRunit(object):
     """ Nagios Client/Node executed from runit """
 
     def __init__(self):
-        self.environment = DEFAULT_ENVIRONMENT
         self.inotifier = None
-        self.interval = DEFAULT_INTERVAL
         self.mqueue = Queue.Queue(0)
         self._stop = threading.Event()
+        #
+        self.config_uri = None
+        self.environment = DEFAULT_ENVIRONMENT
+        self.interval = DEFAULT_INTERVAL
+        self.results_uri = None
+        self.shared_key = None
+        self.url = None
 
     def _stop_inotifier(self):
         """ Stop inotify thread """
@@ -136,8 +141,8 @@ class NagiosRunit(object):
         """ Send results to remote Nagios Host """
         sender = NagiosSender()
         sender.set_command(CMD_GET_RESULTS)
-        sender.set_url('%s%s' % (NAGIOS_HOST, RESULTS_URI))
-        sender.set_shared_key(SHARED_KEY)
+        sender.set_url('%s%s' % (self.url, self.results_uri))
+        sender.set_shared_key(self.shared_key)
         try:
             sender.run()
         except Exception:
@@ -160,8 +165,8 @@ class NagiosRunit(object):
 
         sender = NagiosSender()
         sender.set_command(CMD_GET_CONFIG)
-        sender.set_shared_key(SHARED_KEY)
-        sender.set_url('%s%s' % (NAGIOS_HOST, CONFIG_URI))
+        sender.set_shared_key(self.shared_key)
+        sender.set_url('%s%s' % (self.url, self.config_uri))
         try:
             sender.run()
         except Exception:
@@ -170,6 +175,10 @@ class NagiosRunit(object):
 
         del sender
 
+    def set_config_uri(self, config_uri):
+        """ Set URI for posting Config """
+        self.config_uri = config_uri
+
     def set_environment(self, environment):
         """ Set working environment """
         self.environment = environment
@@ -177,6 +186,18 @@ class NagiosRunit(object):
     def set_interval(self, interval):
         """ Set interval for sending results """
         self.interval = interval
+
+    def set_results_uri(self, results_uri):
+        """ Set URI for posting Results """
+        self.results_uri = results_uri
+
+    def set_shared_key(self, shared_key):
+        """ Set shared key for scrambling data """
+        self.shared_key = shared_key
+
+    def set_url(self, url):
+        """ Set Nagios Host URL """
+        self.url = url
 
     def stop(self):
         """ Stop everything """
@@ -312,27 +333,31 @@ def main():
     logging.getLogger().setLevel(log_level)
 
     # Yes, we want to crash loud if some of those aren't provided
-    SHARED_KEY = os.environ['NAGIOS_SHARED_KEY']
-    NAGIOS_HOST = os.environ['NAGIOS_HOST']
-    CONFIG_URI = os.environ['NAGIOS_CONFIG_URI']
-    RESULTS_URI = os.environ['NAGIOS_RESULTS_URI']
+    shared_key = os.environ['NAGIOS_SHARED_KEY']
+    nagios_host = os.environ['NAGIOS_HOST']
+    config_uri = os.environ['NAGIOS_CONFIG_URI']
+    results_uri = os.environ['NAGIOS_RESULTS_URI']
 
     if args.action == 'send_config':
         nagios_sender = NagiosSender()
         nagios_sender.set_command(CMD_GET_CONFIG)
-        nagios_sender.set_shared_key(SHARED_KEY)
-        nagios_sender.set_url('%s%s' % (NAGIOS_HOST, CONFIG_URI))
+        nagios_sender.set_shared_key(shared_key)
+        nagios_sender.set_url('%s%s' % (nagios_host, config_uri))
         nagios_sender.run()
     elif args.action == 'send_results':
         nagios_sender = NagiosSender()
         nagios_sender.set_command(CMD_GET_RESULTS)
-        nagios_sender.set_url('%s%s' % (NAGIOS_HOST, RESULTS_URI))
-        nagios_sender.set_shared_key(SHARED_KEY)
+        nagios_sender.set_url('%s%s' % (nagios_host, results_uri))
+        nagios_sender.set_shared_key(shared_key)
         nagios_sender.run()
     elif args.action == 'runit':
         nagios_runit = NagiosRunit()
-        nagios_runit.set_interval(args.interval)
+        nagios_runit.set_config_uri(config_uri)
         nagios_runit.set_environment(args.environment)
+        nagios_runit.set_interval(args.interval)
+        nagios_runit.set_results_uri(results_uri)
+        nagios_runit.set_shared_key(shared_key)
+        nagios_runit.set_url(nagios_host)
         nagios_runit.run()
 
     logging.shutdown()
