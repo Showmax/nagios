@@ -46,7 +46,7 @@ class NagiosSender(object):
             encoded_c = chr(abs(ord(string[i]) - ord(key_c) % 256))
             decoded_chars.append(encoded_c)
 
-        decoded_string = "".join(decoded_chars)
+        decoded_string = ''.join(decoded_chars)
         return decoded_string
 
     def run(self):
@@ -58,12 +58,12 @@ class NagiosSender(object):
             sys.exit(0)
 
         checksum = hashlib.sha256(stdin).hexdigest()
-        data = "CHECKSUM: %s\n" % (checksum)
-        data += "FQDN: %s\n" % (getfqdn())
-        data += "---\n"
+        data = 'CHECKSUM: %s\n' % (checksum)
+        data += 'FQDN: %s\n' % (getfqdn())
+        data += '---\n'
         data += stdin
         encoded = self.encode(self.shared_key, data)
-        headers = {"content-type": "text/plain"}
+        headers = {'content-type': 'text/plain'}
         rsp = requests.post(self.url, data=encoded, headers=headers,
                 timeout=self.http_timeout)
 
@@ -84,16 +84,16 @@ class NagiosSender(object):
         try:
             proc = subprocess.Popen(cmd, stdout=subprocess.PIPE)
         except Exception as exception:
-            logging.error("Failed to execute command: %s", exception)
+            logging.error('Failed to execute command: %s', exception)
             return None
 
         (stdout_lines, stderr_lines) = proc.communicate()
         if stderr_lines is not None:
-            logging.error("Command has returned some errors.")
+            logging.error('Command has returned some errors.')
             return None
 
         if stdout_lines is None or len(stdout_lines) < 1:
-            logging.error("Command has returned no lines.")
+            logging.error('Command has returned no lines.')
             return None
 
         return stdout_lines
@@ -104,7 +104,7 @@ class NagiosSendConfig(NagiosSender):
 
     def __init__(self):
         NagiosSender.__init__(self)
-        self.url = "%s%s" % (config.NAGIOS_HOST, config.CONFIG_URI)
+        self.url = '%s%s' % (config.NAGIOS_HOST, config.CONFIG_URI)
         self.command = config.CMD_GET_CONFIG
         self.shared_key = config.SHARED_KEY
 
@@ -114,7 +114,7 @@ class NagiosSendResults(NagiosSender):
 
     def __init__(self):
         NagiosSender.__init__(self)
-        self.url = "%s%s" % (config.NAGIOS_HOST, config.RESULTS_URI)
+        self.url = '%s%s' % (config.NAGIOS_HOST, config.RESULTS_URI)
         self.command = config.CMD_GET_RESULTS
         self.shared_key = config.SHARED_KEY
 
@@ -122,7 +122,7 @@ class NagiosSendResults(NagiosSender):
 def main():
     """ main function - setup logging and launch instance of NagiosSender """
     logstream = logging.StreamHandler(stream=sys.stdout)
-    log_fmt = "%(asctime)s %(levelname)-10s %(threadName)-11s %(message)s"
+    log_fmt = '%(asctime)s %(levelname)-10s %(threadName)-11s %(message)s'
     formatter = logging.Formatter(log_fmt)
 
     logstream.setFormatter(formatter)
@@ -132,19 +132,19 @@ def main():
     logger.setLevel(config.LOG_LEVEL)
 
     if len(sys.argv) != 2:
-        logging.error("Not enough/too many arguments given.")
-        logging.error("%s <send_config|send_results>", sys.argv[0])
+        logging.error('Not enough/too many arguments given.')
+        logging.error('%s <send_config|send_results>', sys.argv[0])
         sys.exit(1)
-    if sys.argv[1] == "send_config":
+    if sys.argv[1] == 'send_config':
         nagios_instance = NagiosSendConfig()
-    elif sys.argv[1] == "send_results":
+    elif sys.argv[1] == 'send_results':
         nagios_instance = NagiosSendResults()
     else:
         logging.error("Given argument '%s' is unknown.", sys.argv[1])
-        logging.error("%s <send_config|send_results>", sys.argv[0])
+        logging.error('%s <send_config|send_results>', sys.argv[0])
         sys.exit(1)
 
     nagios_instance.run()
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
