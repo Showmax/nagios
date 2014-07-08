@@ -298,7 +298,7 @@ def main():
             choices=get_actions())
     parser.add_argument('-e', dest='environment', type=str, help='environment',
             choices=get_environments(), default=DEFAULT_ENVIRONMENT)
-    parser.add_argument('-i', dest='send_interval', type=int,
+    parser.add_argument('-i', dest='interval', type=int,
             help='how often to send check results', default=DEFAULT_INTERVAL)
     parser.add_argument('-v', dest='verbose', action='store_true',
             help='add to logging verbosity')
