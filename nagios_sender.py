@@ -117,7 +117,7 @@ class NagiosRunit(object):
             pass
 
     def handler_signal(self, signum, frame):
-        """ Handle signals, resp. set event """ 
+        """ Handle signals, resp. set event """
         self._stop.set()
 
     def run(self):
