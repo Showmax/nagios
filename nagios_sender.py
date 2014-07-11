@@ -246,7 +246,7 @@ class NagiosSender(object):
         if stdin is None:
             # This is to keep cron quiet
             # TODO - however, don't forget to send metrics!
-            sys.exit(0)
+            return
 
         checksum = hashlib.sha256(stdin).hexdigest()
         data = 'CHECKSUM: %s\n' % (checksum)
