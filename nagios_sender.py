@@ -337,6 +337,11 @@ def main():
     nagios_host = os.environ['NAGIOS_HOST']
     config_uri = os.environ['NAGIOS_CONFIG_URI']
     results_uri = os.environ['NAGIOS_RESULTS_URI']
+    logging.debug('Environment: %s', args.environment)
+    logging.debug('RHost: %s', nagios_host)
+    logging.debug('Shared Key: %s', shared_key)
+    logging.debug('Config URI: %s', config_uri)
+    logging.debug('Results URI: %s', results_uri)
 
     if args.action == 'send_config':
         nagios_sender = NagiosSender()
