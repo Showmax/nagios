@@ -158,7 +158,7 @@ class NagiosRunit(object):
 
         while True:
             try:
-                (event_desc, fpath) = self.mqueue.get()
+                (event_desc, fpath) = self.mqueue.get(1, True)
                 logging.info("Event %s on file %s", event_desc, fpath)
             except Queue.Empty:
                 break
@@ -248,6 +248,8 @@ class NagiosSender(object):
             # TODO - however, don't forget to send metrics!
             return
 
+        logging.debug('CMD: %s', self.command)
+        logging.debug('Output: %s', repr(stdin))
         checksum = hashlib.sha256(stdin).hexdigest()
         data = 'CHECKSUM: %s\n' % (checksum)
         data += 'FQDN: %s\n' % (getfqdn())
