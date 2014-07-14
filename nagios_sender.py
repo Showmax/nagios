@@ -244,8 +244,8 @@ class NagiosSender(object):
         logging.debug('Command %s', " ".join(self.command))
         stdin = self.run_command(self.command)
         if stdin is None:
-            # This is to keep cron quiet
-            # TODO - however, don't forget to send metrics!
+            logging.error('Command %s has returned empty STDIN!',
+                    ' '.join(self.command))
             return
 
         logging.debug('CMD: %s', self.command)
@@ -266,12 +266,10 @@ class NagiosSender(object):
             status_code = 0
 
         logging.debug('Status code is %i', status_code)
-        # TODO - What are we going to do on error?
         if status_code != 200:
-            # FAIL
-            pass
+            logging.error('HTTP Code is %i, expected 200', status_code)
 
-        #print rsp.raw.read()
+        logging.debug('HTTP Raw Response: %s', rsp.raw.read())
 
     def run_command(self, cmd):
         """ Run given command and return its STDOUT """
