@@ -575,7 +575,7 @@ def import_remote_config():
 def main():
     """ main """
     logging.basicConfig(format=LOG_FORMAT)
-    logging.getLogger().setLevel(logging.ERROR)
+    logging.getLogger().setLevel(logging.INFO)
     if len(sys.argv) < 2:
         logging.error("Not enough arguments given.")
         print_help()
