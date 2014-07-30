@@ -17,7 +17,7 @@ import yaml
 from nagios_to_yaml import NagiosToYaml
 
 ICINGA_DIR = "/etc/icinga"
-LOG_FMT = '%(asctime)s %(levelname)-10s %(message)s'
+LOG_FORMAT = '%(asctime)s %(levelname)-10s %(message)s'
 
 MACHINEDB_FILE = "/etc/icinga/machines.json"
 NAGIOS_DEFS_FILE = "/etc/icinga/nagios.yml"
@@ -130,8 +130,8 @@ class NagiosConfigGenerator(object):
         wouldn't know Host(s) in hostgroups.
         """
         for host_key in self.nagios_db["hosts"].keys():
-            host_dict = self.nagios_db["hosts"][host_key]["host"]
-            host_dict["host_name"] = host_key
+            host_dict = self.nagios_db["hosts"][host_key]
+            host_dict["host"]["host_name"] = host_key
             self.ensure_host_definition(host_dict)
 
     def ensure_host_definition(self, host_dict):
@@ -140,7 +140,7 @@ class NagiosConfigGenerator(object):
             return (-1)
 
         host_file = "%s/objects/host_%s.cfg" % (ICINGA_DIR,
-                host_dict["host_name"])
+                host_dict["host"]["host_name"])
         if os.path.exists(host_file):
             #logging.debug("File '%s' exists.", host_file)
             return 1
@@ -148,14 +148,23 @@ class NagiosConfigGenerator(object):
         fhandle = open(host_file, "w+")
         self.write_definition(fhandle, "host", host_dict)
 
+        if "services" not in host_dict:
+            host_dict["services"] = {}
+
         dummy_svc = dict()
         dummy_svc["active_checks_enabled"] = 1
         dummy_svc["check_command"] = "return-ok"
         dummy_svc["check_interval"] = 20
-        dummy_svc["host_name"] = host_dict["host_name"]
-        dummy_svc["service_description"] = "dummy-ok"
+        dummy_svc["host_name"] = host_dict["host"]["host_name"]
         dummy_svc["use"] = "generic-service"
-        self.write_definition(fhandle, "service", dummy_svc)
+        host_dict["services"]["dummy-ok"] = dummy_svc
+
+        for service_key in host_dict["services"].iterkeys():
+            service_copy = host_dict["services"][service_key]
+            service_copy["service_description"] = service_key
+            self.write_definition(fhandle, "service",
+                    service_copy)
+            del service_copy
 
         fhandle.close()
         return 0
