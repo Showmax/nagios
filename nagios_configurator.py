@@ -17,6 +17,7 @@ import yaml
 from nagios_to_yaml import NagiosToYaml
 
 ICINGA_DIR = "/etc/icinga"
+LOG_FMT = '%(asctime)s %(levelname)-10s %(message)s'
 
 MACHINEDB_FILE = "/etc/icinga/machines.json"
 NAGIOS_DEFS_FILE = "/etc/icinga/nagios.yml"
@@ -564,15 +565,8 @@ def import_remote_config():
 
 def main():
     """ main """
-    logstream = logging.StreamHandler()
-    log_fmt = "%(asctime)s %(levelname)-10s %(message)s"
-    formatter = logging.Formatter(log_fmt)
-    logstream.setFormatter(formatter)
-
-    logger = logging.getLogger()
-    logger.addHandler(logstream)
-    logger.setLevel(logging.DEBUG)
-
+    logging.basicConfig(format=LOG_FORMAT)
+    logging.getLogger().setLevel(logging.ERROR)
     if len(sys.argv) < 2:
         logging.error("Not enough arguments given.")
         print_help()
