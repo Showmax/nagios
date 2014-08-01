@@ -146,7 +146,7 @@ class NagiosConfigGenerator(object):
             return 1
 
         fhandle = open(host_file, "w+")
-        self.write_definition(fhandle, "host", host_dict)
+        self.write_definition(fhandle, "host", host_dict["host"])
 
         if "services" not in host_dict:
             host_dict["services"] = {}
