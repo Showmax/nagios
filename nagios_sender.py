@@ -270,6 +270,8 @@ class NagiosSender(object):
             logging.error('HTTP Code is %i, expected 200', status_code)
 
         logging.debug('HTTP Raw Response: %s', rsp.raw.read())
+        rsp.close()
+        del rsp
 
     def run_command(self, cmd):
         """ Run given command and return its STDOUT """
