@@ -259,57 +259,7 @@ class NagiosConfigGenerator(object):
         if "active" not in self.nagios_db["services"].keys():
             self.nagios_db["services"]["active"] = {}
 
-
-    def mdb_to_nagios(self):
-        """ Sync Nagios YAML with MDB """
-        for host_key in self.machine_db.keys():
-            hostname = "%s.icflix.com" % (host_key)
-            mdb_host = self.machine_db[host_key]
-            if "datacenter" in mdb_host.keys() \
-                    and "provider" in mdb_host.keys():
-                dct_name = "%s.%s" % (mdb_host["datacenter"],
-                        mdb_host["provider"])
-                dct_dict = self.get_host_dict(dct_name, "localhost", None, None)
-                dct_dict["use"] = "generic-datacenter"
-                dct_dict.pop("_SHORTNAME")
-                dct_dict.pop("_DOMAIN")
-                self.add_datacenter_to_nagios(dct_dict)
-                parents = [dct_name]
-            else:
-                parents = None
-
-            host_dict = self.get_host_dict(hostname, mdb_host["ip"], 22, parents)
-            self.add_host_to_nagios(host_dict, False)
-            if "lxc" not in mdb_host.keys():
-                continue
-
-            for lxc_key in mdb_host["lxc"].keys():
-                ssh_port = self.get_ssh_port(mdb_host["lxc"][lxc_key], True)
-                lxc_dict = self.get_host_dict(lxc_key, mdb_host["ip"],
-                        ssh_port, [hostname])
-                self.add_host_to_nagios(lxc_dict, True)
-
-    def print_definition(self, definition_str, some_dict):
-        """ Print host definition """
-        stuffing_len = 0
-        dict_keys = some_dict.keys()
-        dict_keys.sort()
-        # figure-out padding len
-        for attribute in dict_keys:
-            if len(attribute) > stuffing_len:
-                stuffing_len = len(attribute)
-
-        stuffing_len += 1
-        print "define %s {" % (definition_str)
-        for attribute in dict_keys:
-            padding_len = stuffing_len - len(attribute)
-            padding = self.get_padding(padding_len)
-            print "  %s%s%s" % (attribute, padding, some_dict[attribute])
-
-        print "}\n"
-
-    def run(self, services_cfg):
-        """ Go, go, go! """
+    def import_config(self, services_cfg):
         if not os.path.exists(services_cfg):
             logging.error("Given file '%s' doesn't exist.", services_cfg)
             return False
@@ -370,6 +320,61 @@ class NagiosConfigGenerator(object):
                 self.write_definition(fhandle, "service", service_copy)
 
             fhandle.close()
+
+        return True
+
+    def mdb_to_nagios(self):
+        """ Sync Nagios YAML with MDB """
+        for host_key in self.machine_db.keys():
+            hostname = "%s.icflix.com" % (host_key)
+            mdb_host = self.machine_db[host_key]
+            if "datacenter" in mdb_host.keys() \
+                    and "provider" in mdb_host.keys():
+                dct_name = "%s.%s" % (mdb_host["datacenter"],
+                        mdb_host["provider"])
+                dct_dict = self.get_host_dict(dct_name, "localhost", None, None)
+                dct_dict["use"] = "generic-datacenter"
+                dct_dict.pop("_SHORTNAME")
+                dct_dict.pop("_DOMAIN")
+                self.add_datacenter_to_nagios(dct_dict)
+                parents = [dct_name]
+            else:
+                parents = None
+
+            host_dict = self.get_host_dict(hostname, mdb_host["ip"], 22, parents)
+            self.add_host_to_nagios(host_dict, False)
+            if "lxc" not in mdb_host.keys():
+                continue
+
+            for lxc_key in mdb_host["lxc"].keys():
+                ssh_port = self.get_ssh_port(mdb_host["lxc"][lxc_key], True)
+                lxc_dict = self.get_host_dict(lxc_key, mdb_host["ip"],
+                        ssh_port, [hostname])
+                self.add_host_to_nagios(lxc_dict, True)
+
+    def print_definition(self, definition_str, some_dict):
+        """ Print host definition """
+        stuffing_len = 0
+        dict_keys = some_dict.keys()
+        dict_keys.sort()
+        # figure-out padding len
+        for attribute in dict_keys:
+            if len(attribute) > stuffing_len:
+                stuffing_len = len(attribute)
+
+        stuffing_len += 1
+        print "define %s {" % (definition_str)
+        for attribute in dict_keys:
+            padding_len = stuffing_len - len(attribute)
+            padding = self.get_padding(padding_len)
+            print "  %s%s%s" % (attribute, padding, some_dict[attribute])
+
+        print "}\n"
+
+    def run(self, services_cfg):
+        """ Go, go, go! """
+        if not self.import_config(services_cfg):
+            return False
 
         self.ensure_host_definitions()
         self.write_command_definitions()
