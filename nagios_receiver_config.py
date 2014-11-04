@@ -1,10 +1,10 @@
-SHARED_KEY = ""
-CFG_DIR = "/var/lib/nagios/remoteconfigs/"
-RESULTS_DIR = "/var/lib/nagios/remoteresults/"
+SHARED_KEY = ''
+CFG_DIR = '/var/lib/nagios/remoteconfigs/'
+RESULTS_DIR = '/var/lib/nagios/remoteresults/'
 
 COMPONENTS = {
-        "configs": "config",
-        "results": "result",
+        'configs': 'config',
+        'results': 'result',
         }
 
 # Maximum Content-Length 1MB ?
