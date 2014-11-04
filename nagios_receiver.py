@@ -141,7 +141,11 @@ def application(environ, start_response):
             raise HttpError(404)
 
         data_raw = get_post_data(environ['wsgi.input'], env_vars['content_len'])
-        lines = decode(config.SHARED_KEY, data_raw).split('\n')
+        if config.SCRAMBLE_DATA:
+            lines = decode(config.SHARED_KEY, data_raw).split('\n')
+        else:
+            lines = data_raw.split('\n')
+
         # The first line is ALWAYS 'CHECKSUM', second is 'FQDN'. If it isn't,
         # then we've either received garbage OR garbage. Hard cheese.
         if len(lines) < 3:

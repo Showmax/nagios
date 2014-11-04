@@ -1,4 +1,5 @@
 SHARED_KEY = ''
+SCRAMBLE_DATA = True
 CFG_DIR = '/var/lib/nagios/remoteconfigs/'
 RESULTS_DIR = '/var/lib/nagios/remoteresults/'
 
