@@ -125,11 +125,6 @@ def application(environ, start_response):
     try:
         # Preliminary checks and all. Yes, environments DO differ!
         env_vars = get_environment_vars(environ.copy())
-        query_string = ''
-        matches = RE_QUERY_STRING.search(env_vars['uri'])
-        if matches:
-            query_string = matches.group('query_string')
-
         env_vars['uri'] = RE_QUERY_STRING.sub('', env_vars['uri'])
         if env_vars['uri'] == '/health':
             start_response('200 OK', [('Content-Type', 'text/plain')])
