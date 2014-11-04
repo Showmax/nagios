@@ -153,7 +153,8 @@ def application(environ, start_response):
 
         checksum_cli = lines.pop(0).split(':')[1].lstrip(' ')
         rhost = lines.pop(0).split(':')[1].lstrip(' ')
-        garbage = lines.pop(0)
+        # garbage in the first item
+        _ = lines.pop(0)
         checksum_srv = hashlib.sha256('\n'.join(lines)).hexdigest()
         if checksum_cli != checksum_srv or not RE_FQDN.search(rhost):
             raise HttpError(400)
