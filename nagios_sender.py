@@ -105,6 +105,7 @@ class NagiosRunit(object):
         self.environment = DEFAULT_ENVIRONMENT
         self.interval = DEFAULT_INTERVAL
         self.results_uri = None
+        self.scramble = True
         self.shared_key = None
         self.url = None
 
@@ -143,6 +144,7 @@ class NagiosRunit(object):
         sender.set_command(CMD_GET_RESULTS)
         sender.set_url('%s%s' % (self.url, self.results_uri))
         sender.set_shared_key(self.shared_key)
+        sender.set_scramble(self.scramble)
         try:
             sender.run()
         except Exception:
@@ -167,6 +169,7 @@ class NagiosRunit(object):
         sender.set_command(CMD_GET_CONFIG)
         sender.set_shared_key(self.shared_key)
         sender.set_url('%s%s' % (self.url, self.config_uri))
+        sender.set_scramble(self.scramble)
         try:
             sender.run()
         except Exception:
@@ -190,6 +193,10 @@ class NagiosRunit(object):
     def set_results_uri(self, results_uri):
         """Set URI for posting Results."""
         self.results_uri = results_uri
+
+    def set_scramble(self, scramble):
+        """Turn on/off data scrambling."""
+        self.scramble = scramble
 
     def set_shared_key(self, shared_key):
         """Set shared key for scrambling data."""
@@ -215,6 +222,7 @@ class NagiosSender(object):
         self.url = None
         self.shared_key = None
         self.http_timeout = 15
+        self.scramble = True
 
     def encode(self, key, string):
         """Encrypt given string with given key."""
@@ -255,7 +263,11 @@ class NagiosSender(object):
         data += 'FQDN: %s\n' % (getfqdn())
         data += '---\n'
         data += stdin
-        encoded = self.encode(self.shared_key, data)
+        if self.scramble:
+            encoded = self.encode(self.shared_key, data)
+        else:
+            encoded = data
+
         headers = {'content-type': 'text/plain'}
         rsp = requests.post(self.url, data=encoded, headers=headers,
                 timeout=self.http_timeout)
@@ -295,6 +307,10 @@ class NagiosSender(object):
     def set_command(self, command):
         """Set command to execute - list is expected."""
         self.command = command
+
+    def set_scramble(self, scramble):
+        """Turn on/off data scrambling."""
+        self.scramble = scramble
 
     def set_shared_key(self, shared_key):
         """Set shared key for scrambling message."""
@@ -338,12 +354,14 @@ def main():
         nagios_sender.set_command(CMD_GET_CONFIG)
         nagios_sender.set_shared_key(shared_key)
         nagios_sender.set_url('%s%s' % (nagios_host, config_uri))
+        nagios_sender.set_scramble(args.scramble)
         nagios_sender.run()
     elif args.action == 'send_results':
         nagios_sender = NagiosSender()
         nagios_sender.set_command(CMD_GET_RESULTS)
         nagios_sender.set_url('%s%s' % (nagios_host, results_uri))
         nagios_sender.set_shared_key(shared_key)
+        nagios_sender.set_scramble(args.scramble)
         nagios_sender.run()
     elif args.action == 'runit':
         nagios_runit = NagiosRunit()
@@ -353,6 +371,7 @@ def main():
         nagios_runit.set_results_uri(results_uri)
         nagios_runit.set_shared_key(shared_key)
         nagios_runit.set_url(nagios_host)
+        nagios_runit.set_scramble(args.scramble)
         nagios_runit.run()
 
     logging.shutdown()
@@ -373,6 +392,9 @@ def parse_cli_args():
     parser.add_argument('-v',
             dest='verbose', action='store_true',
             help='Increase logging verbosity.')
+    parser.add_argument('--no-scramble',
+            dest='scramble', action='store_false', default=True,
+            help='Turn-off scrambling of data.')
     return parser.parse_args()
 
 if __name__ == '__main__':
