@@ -21,16 +21,16 @@ class HttpError(Exception):
     """Abstraction of HTTP Errors."""
 
     http_codes = {
-            200: 'OK',
-            400: 'Bad Request',
-            404: 'Not Found',
-            408: 'Request Timeout',
-            411: 'Length Required',
-            413: 'Request Entity Too Large',
-            415: 'Unsupported Media Type',
-            500: 'Internal Server Error',
-            501: 'Not Implemented',
-            }
+        200: 'OK',
+        400: 'Bad Request',
+        404: 'Not Found',
+        408: 'Request Timeout',
+        411: 'Length Required',
+        413: 'Request Entity Too Large',
+        415: 'Unsupported Media Type',
+        500: 'Internal Server Error',
+        501: 'Not Implemented',
+    }
 
 
 class TimeoutException(Exception):
@@ -71,11 +71,11 @@ def get_environment_vars(environ):
     """Get environment variables and enforce limits."""
     # Defaults
     env_vars = {
-            'uri': '',
-            'content_len': 0,
-            'content_type': 'unknown',
-            'req_method': 'FOO',
-            }
+        'uri': '',
+        'content_len': 0,
+        'content_type': 'unknown',
+        'req_method': 'FOO',
+    }
     if 'REQUEST_URI' in environ:
         env_vars['uri'] = environ['REQUEST_URI']
     elif 'PATH_INFO' in environ:
@@ -163,12 +163,12 @@ def application(environ, start_response):
 
     except HttpError as exception:
         response = '%s %s' % (exception.args[0],
-                exception.http_codes[exception.args[0]])
+                              exception.http_codes[exception.args[0]])
         start_response(response, [('Content-Type', 'text/plain')])
         return ['']
     except Exception as exception:
         start_response('500 Internal Server Error',
-                [('Content-Type', 'text/plain')])
+                       [('Content-Type', 'text/plain')])
         return ['']
 
 def save_config(environ, start_response, lines, rhost):
