@@ -16,13 +16,13 @@ RE_DEFINE_END = re.compile(r'^[\s\t]*}[\s\t]*$')
 RE_ICFLIX = re.compile(r'icflix\.(com|io)$')
 
 ALIASES = {
-        'command': 'commands',
-        'contact': 'contacts',
-        'contactgroup': 'contactgroups',
-        'host': 'hosts',
-        'hostgroup': 'hostgroups',
-        'service': 'services',
-        }
+    'command': 'commands',
+    'contact': 'contacts',
+    'contactgroup': 'contactgroups',
+    'host': 'hosts',
+    'hostgroup': 'hostgroups',
+    'service': 'services',
+}
 
 class NagiosToYaml(object):
     """Convert given Nagios configuration file into YAML."""
@@ -107,7 +107,7 @@ class NagiosToYaml(object):
 
                 if fqdn not in self.nagios_cfg['hosts']:
                     logging.warning('%s(former: %s) not found.', fqdn,
-                            repr(member))
+                                    repr(member))
                     members.append(member)
                     continue
 
