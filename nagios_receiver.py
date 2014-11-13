@@ -84,7 +84,7 @@ def get_environment_vars(environ):
     if 'CONTENT_LENGTH' in environ:
         try:
             env_vars['content_len'] = int(environ['CONTENT_LENGTH'])
-        except Exception as exception:
+        except ValueError:
             env_vars['content_len'] = 0
 
     if 'REQUEST_METHOD' in environ:
