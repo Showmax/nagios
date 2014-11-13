@@ -1,12 +1,13 @@
+"""Nagios Receiver config."""
 SHARED_KEY = ''
 SCRAMBLE_DATA = True
 CFG_DIR = '/var/lib/nagios/remoteconfigs/'
 RESULTS_DIR = '/var/lib/nagios/remoteresults/'
 
 COMPONENTS = {
-        'configs': 'config',
-        'results': 'result',
-        }
+    'configs': 'config',
+    'results': 'result',
+}
 
 # Maximum Content-Length 1MB ?
 CONTENT_LENGTH_MAX = 1048576
