@@ -33,18 +33,22 @@ CHECK_MULTI_DIR = '/etc/check_multi'
 LOG_FORMAT = '%(asctime)s %(levelname)-10s %(threadName)-11s %(message)s'
 
 # check_multi commands to execute in order to send config/results
-CMD_GET_CONFIG = [CHECK_MULTI_BIN,
-        '-f',
-        CHECK_MULTI_DIR,
-        '-s',
-        'HOSTNAME="%s"' % (getfqdn()),
-        '-r',
-        '2048' ]
-CMD_GET_RESULTS = [CHECK_MULTI_BIN,
-        '-f',
-        CHECK_MULTI_DIR,
-        '-r',
-        '256' ]
+CMD_GET_CONFIG = [
+    CHECK_MULTI_BIN,
+    '-f',
+    CHECK_MULTI_DIR,
+    '-s',
+    'HOSTNAME="%s"' % (getfqdn()),
+    '-r',
+    '2048'
+]
+CMD_GET_RESULTS = [
+    CHECK_MULTI_BIN,
+    '-f',
+    CHECK_MULTI_DIR,
+    '-r',
+    '256'
+]
 
 # MyPie {{{
 class MyPie(pyinotify.ProcessEvent):
@@ -253,7 +257,7 @@ class NagiosSender(object):
         stdin = self.run_command(self.command)
         if stdin is None:
             logging.error('Command %s has returned empty STDIN!',
-                    ' '.join(self.command))
+                          ' '.join(self.command))
             return
 
         logging.debug('CMD: %s', self.command)
@@ -270,7 +274,7 @@ class NagiosSender(object):
 
         headers = {'content-type': 'text/plain'}
         rsp = requests.post(self.url, data=encoded, headers=headers,
-                timeout=self.http_timeout)
+                            timeout=self.http_timeout)
 
         try:
             status_code = int(rsp.status_code)
@@ -380,21 +384,21 @@ def parse_cli_args():
     """Return parsed CLI args."""
     parser = argparse.ArgumentParser()
     parser.add_argument('-a',
-            dest='action', type=str, choices=get_actions(),
-            help='Action to do.')
+                        dest='action', type=str, choices=get_actions(),
+                        help='Action to do.')
     parser.add_argument('-e',
-            dest='environment', type=str, choices=get_environments(),
-            default=DEFAULT_ENVIRONMENT,
-            help='Set environment.')
+                        dest='environment', type=str,
+                        choices=get_environments(), default=DEFAULT_ENVIRONMENT,
+                        help='Set environment.')
     parser.add_argument('-i',
-            dest='interval', type=int, default=DEFAULT_INTERVAL,
-            help='How often to send check results.')
+                        dest='interval', type=int, default=DEFAULT_INTERVAL,
+                        help='How often to send check results.')
     parser.add_argument('-v',
-            dest='verbose', action='store_true',
-            help='Increase logging verbosity.')
+                        dest='verbose', action='store_true',
+                        help='Increase logging verbosity.')
     parser.add_argument('--no-scramble',
-            dest='scramble', action='store_false', default=True,
-            help='Turn-off scrambling of data.')
+                        dest='scramble', action='store_false', default=True,
+                        help='Turn-off scrambling of data.')
     return parser.parse_args()
 
 if __name__ == '__main__':
