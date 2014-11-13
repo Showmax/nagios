@@ -22,14 +22,14 @@ LOG_FORMAT = '%(asctime)s %(levelname)-10s %(message)s'
 MACHINEDB_FILE = '/etc/icinga/machines.json'
 NAGIOS_DEFS_FILE = '/etc/icinga/nagios.yml'
 NAGIOS_TKEYS = [
-        'commands',
-        'contacts',
-        'contactgroups',
-        'datacenters',
-        'hostgroups',
-        'hosts',
-        'services'
-        ]
+    'commands',
+    'contacts',
+    'contactgroups',
+    'datacenters',
+    'hostgroups',
+    'hosts',
+    'services'
+]
 
 STAGING_DOMAIN = 'icflix.io'
 # 7 minutes
@@ -139,8 +139,8 @@ class NagiosConfigGenerator(object):
         if host_dict is None:
             return (-1)
 
-        host_file = '%s/objects/host_%s.cfg' % (ICINGA_DIR,
-                host_dict['host']['host_name'])
+        host_file = ('%s/objects/host_%s.cfg' %
+                     (ICINGA_DIR, host_dict['host']['host_name']))
         if os.path.exists(host_file):
             #logging.debug("File '%s' exists.", host_file)
             return 1
@@ -163,7 +163,7 @@ class NagiosConfigGenerator(object):
             service_copy = host_dict['services'][service_key]
             service_copy['service_description'] = service_key
             self.write_definition(fhandle, 'service',
-                    service_copy)
+                                  service_copy)
             del service_copy
 
         fhandle.close()
@@ -327,7 +327,7 @@ class NagiosConfigGenerator(object):
             mdb_host = self.machine_db[host_key]
             if 'datacenter' in mdb_host and 'provider' in mdb_host:
                 dct_name = '%s.%s' % (mdb_host['datacenter'],
-                        mdb_host['provider'])
+                                      mdb_host['provider'])
                 dct_dict = self.get_host_dict(dct_name, 'localhost', None, None)
                 dct_dict['use'] = 'generic-datacenter'
                 dct_dict.pop('_SHORTNAME')
@@ -337,7 +337,8 @@ class NagiosConfigGenerator(object):
             else:
                 parents = None
 
-            host_dict = self.get_host_dict(hostname, mdb_host['ip'], 22, parents)
+            host_dict = self.get_host_dict(hostname, mdb_host['ip'], 22,
+                                           parents)
             self.add_host_to_nagios(host_dict, False)
             if 'lxc' not in mdb_host:
                 continue
@@ -345,7 +346,7 @@ class NagiosConfigGenerator(object):
             for lxc_key in mdb_host['lxc'].iterkeys():
                 ssh_port = self.get_ssh_port(mdb_host['lxc'][lxc_key], True)
                 lxc_dict = self.get_host_dict(lxc_key, mdb_host['ip'],
-                        ssh_port, [hostname])
+                                              ssh_port, [hostname])
                 self.add_host_to_nagios(lxc_dict, True)
 
     def print_definition(self, definition_str, some_dict):
@@ -460,7 +461,7 @@ class NagiosConfigGenerator(object):
             padding_len = stuffing_len - len(attribute)
             padding = self.get_padding(padding_len)
             fhandle.write('  %s%s%s\n' % (attribute, padding,
-                some_dict[attribute]))
+                                          some_dict[attribute]))
 
         fhandle.write('}\n\n')
 
