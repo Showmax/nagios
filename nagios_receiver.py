@@ -11,8 +11,12 @@ import hashlib
 import os
 import re
 import time
+import traceback
+import sys
 
 import nagios_receiver_config as config
+
+sys.stdout = sys.stderr
 
 RE_QUERY_STRING = re.compile(r'(?P<query_string>\?.*)$')
 RE_FQDN = re.compile(r'^[a-zA-Z0-9]+[a-zA-Z0-9\.\-\_]+[a-zA-Z]+$')
@@ -95,14 +99,19 @@ def get_environment_vars(environ):
 
     # Only valid Request Method is POST
     if env_vars['req_method'] != 'POST':
+        print "Invalid HTTP Request '%s' method" % env_vars['req_method']
         raise HttpError(501)
     if env_vars['content_type'] != 'text/plain':
+        print "Invalid Content-Type '%s'" % env_vars['content_type']
         raise HttpError(415)
     #  Content-Length is ALWAYS > 0
     if env_vars['content_len'] == 0:
+        print "Invalid Content-Length %i" % env_vars['content_len']
         raise HttpError(411)
     # Content-Length is ALWAYS < Content-Legth Limit
     if env_vars['content_len'] > config.CONTENT_LENGTH_MAX:
+        print ("Content-Length %.0f exceeds limit %.0f"
+               % (env_vars['content_len'], config.CONTENT_LENGTH_MAX))
         raise HttpError(413)
 
     return env_vars
@@ -116,6 +125,7 @@ def get_post_data(fhandle, data_len):
     try:
         post_data = fhandle.read(data_len)
     except TimeoutException:
+        print "Failed to read HTTP POST data: %s" % traceback.format_exc()
         raise HttpError(408)
 
     return post_data
@@ -133,6 +143,7 @@ def application(environ, start_response):
         uri_parts = env_vars['uri'].split('/')[1:]
         component = uri_parts[len(uri_parts) - 1]
         if component not in config.COMPONENTS:
+            print "Unknown component '%s'" % component
             raise HttpError(404)
 
         data_raw = get_post_data(environ['wsgi.input'], env_vars['content_len'])
@@ -144,6 +155,7 @@ def application(environ, start_response):
         # The first line is ALWAYS 'CHECKSUM', second is 'FQDN'. If it isn't,
         # then we've either received garbage OR garbage. Hard cheese.
         if len(lines) < 3:
+            print "Expected at least 3 lines, parsed %i" % len(lines)
             raise HttpError(400)
 
         checksum_cli = lines.pop(0).split(':')[1].lstrip(' ')
@@ -152,6 +164,8 @@ def application(environ, start_response):
         _ = lines.pop(0)
         checksum_srv = hashlib.sha256('\n'.join(lines)).hexdigest()
         if checksum_cli != checksum_srv or not RE_FQDN.search(rhost):
+            print ("Either checksum '%s' or hostname '%s' don't match."
+                   % (checksum_srv, rhost))
             raise HttpError(400)
 
         if config.COMPONENTS[component] == 'config':
@@ -159,14 +173,17 @@ def application(environ, start_response):
         elif config.COMPONENTS[component] == 'result':
             return save_results(environ, start_response, lines, rhost)
         else:
+            print "Unknown action '%s' - this should never happen." % component
             raise HttpError(501)
 
     except HttpError as exception:
+        print traceback.format_exc()
         response = '%s %s' % (exception.args[0],
                               exception.http_codes[exception.args[0]])
         start_response(response, [('Content-Type', 'text/plain')])
         return ['']
     except Exception as exception:
+        print traceback.format_exc()
         start_response('500 Internal Server Error',
                        [('Content-Type', 'text/plain')])
         return ['']
@@ -204,6 +221,7 @@ def write_lines_to_file(file_name, lines):
 
         open('%s.ok' % (file_name), 'w').close()
     except Exception as exception:
+        print traceback.format_exc()
         # If fhandle is open, try to close it
         if fhandle:
             fhandle.close()
