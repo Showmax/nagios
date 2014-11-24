@@ -127,6 +127,7 @@ class NagiosRunit(object):
 
     def run(self):
         """Main."""
+        logging.info('Starting up.')
         signal.signal(signal.SIGHUP, self.handler_signal)
         signal.signal(signal.SIGINT, self.handler_signal)
         signal.signal(signal.SIGTERM, self.handler_signal)
