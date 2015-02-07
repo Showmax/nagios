@@ -7,7 +7,6 @@ found in the LICENSE file.
 Desc: Execute % check_multi;, "encrypt" its STDOUT, HTTP POST it to the server
 """
 import argparse
-import base64
 import hashlib
 import logging
 import logging.handlers
@@ -109,7 +108,6 @@ class NagiosRunit(object):
         self.environment = DEFAULT_ENVIRONMENT
         self.interval = DEFAULT_INTERVAL
         self.results_uri = None
-        self.scramble = True
         self.shared_key = None
         self.url = None
 
@@ -149,7 +147,6 @@ class NagiosRunit(object):
         sender.set_command(CMD_GET_RESULTS)
         sender.set_url('%s%s' % (self.url, self.results_uri))
         sender.set_shared_key(self.shared_key)
-        sender.set_scramble(self.scramble)
         try:
             sender.run()
         except Exception:
@@ -174,7 +171,6 @@ class NagiosRunit(object):
         sender.set_command(CMD_GET_CONFIG)
         sender.set_shared_key(self.shared_key)
         sender.set_url('%s%s' % (self.url, self.config_uri))
-        sender.set_scramble(self.scramble)
         try:
             sender.run()
         except Exception:
@@ -198,10 +194,6 @@ class NagiosRunit(object):
     def set_results_uri(self, results_uri):
         """Set URI for posting Results."""
         self.results_uri = results_uri
-
-    def set_scramble(self, scramble):
-        """Turn on/off data scrambling."""
-        self.scramble = scramble
 
     def set_shared_key(self, shared_key):
         """Set shared key for scrambling data."""
@@ -227,30 +219,6 @@ class NagiosSender(object):
         self.url = None
         self.shared_key = None
         self.http_timeout = 15
-        self.scramble = True
-
-    def encode(self, key, string):
-        """Encrypt given string with given key."""
-        encoded_chars = []
-        for i in xrange(len(string)):
-            key_c = key[i % len(key)]
-            encoded_c = chr(ord(string[i]) + ord(key_c) % 256)
-            encoded_chars.append(encoded_c)
-
-        encoded_string = ''.join(encoded_chars)
-        return base64.urlsafe_b64encode(encoded_string)
-
-    def decode(self, key, string):
-        """Try to decrypt given string with given key."""
-        decoded_chars = []
-        string = base64.urlsafe_b64decode(string)
-        for i in xrange(len(string)):
-            key_c = key[i % len(key)]
-            encoded_c = chr(abs(ord(string[i]) - ord(key_c) % 256))
-            decoded_chars.append(encoded_c)
-
-        decoded_string = ''.join(decoded_chars)
-        return decoded_string
 
     def run(self):
         """Go, go, go!"""
@@ -268,13 +236,8 @@ class NagiosSender(object):
         data += 'FQDN: %s\n' % (getfqdn())
         data += '---\n'
         data += stdin
-        if self.scramble:
-            encoded = self.encode(self.shared_key, data)
-        else:
-            encoded = data
-
         headers = {'content-type': 'text/plain'}
-        rsp = requests.post(self.url, data=encoded, headers=headers,
+        rsp = requests.post(self.url, data=data, headers=headers,
                             timeout=self.http_timeout)
 
         try:
@@ -312,10 +275,6 @@ class NagiosSender(object):
     def set_command(self, command):
         """Set command to execute - list is expected."""
         self.command = command
-
-    def set_scramble(self, scramble):
-        """Turn on/off data scrambling."""
-        self.scramble = scramble
 
     def set_shared_key(self, shared_key):
         """Set shared key for scrambling message."""
@@ -359,14 +318,12 @@ def main():
         nagios_sender.set_command(CMD_GET_CONFIG)
         nagios_sender.set_shared_key(shared_key)
         nagios_sender.set_url('%s%s' % (nagios_host, config_uri))
-        nagios_sender.set_scramble(args.scramble)
         nagios_sender.run()
     elif args.action == 'send_results':
         nagios_sender = NagiosSender()
         nagios_sender.set_command(CMD_GET_RESULTS)
         nagios_sender.set_url('%s%s' % (nagios_host, results_uri))
         nagios_sender.set_shared_key(shared_key)
-        nagios_sender.set_scramble(args.scramble)
         nagios_sender.run()
     elif args.action == 'runit':
         nagios_runit = NagiosRunit()
@@ -376,7 +333,6 @@ def main():
         nagios_runit.set_results_uri(results_uri)
         nagios_runit.set_shared_key(shared_key)
         nagios_runit.set_url(nagios_host)
-        nagios_runit.set_scramble(args.scramble)
         nagios_runit.run()
 
     logging.shutdown()
@@ -397,9 +353,6 @@ def parse_cli_args():
     parser.add_argument('-v',
                         dest='verbose', action='store_true',
                         help='Increase logging verbosity.')
-    parser.add_argument('--no-scramble',
-                        dest='scramble', action='store_false', default=True,
-                        help='Turn-off scrambling of data.')
     return parser.parse_args()
 
 if __name__ == '__main__':

@@ -6,7 +6,6 @@ found in the LICENSE file.
 Desc: Receive encrypted check_multi output via HTTP POST and save it for further
 processing.
 """
-import base64
 import hashlib
 import os
 import re
@@ -41,29 +40,6 @@ class TimeoutException(Exception):
     """Timeout Exception."""
     pass
 
-
-def decode(key, string):
-    """Try to decrypt given string with given key."""
-    decoded_chars = []
-    string = base64.urlsafe_b64decode(string)
-    for i in xrange(len(string)):
-        key_c = key[i % len(key)]
-        encoded_c = chr(abs(ord(string[i]) - ord(key_c) % 256))
-        decoded_chars.append(encoded_c)
-
-    decoded_string = ''.join(decoded_chars)
-    return decoded_string
-
-def encode(key, string):
-    """Encrypt given string with given key."""
-    encoded_chars = []
-    for i in xrange(len(string)):
-        key_c = key[i % len(key)]
-        encoded_c = chr(ord(string[i]) + ord(key_c) % 256)
-        encoded_chars.append(encoded_c)
-
-    encoded_string = ''.join(encoded_chars)
-    return base64.urlsafe_b64encode(encoded_string)
 
 def ensure_dir(file_name):
     """If directory dirname(file_name) doesn't exist, create it."""
@@ -147,10 +123,7 @@ def application(environ, start_response):
             raise HttpError(404)
 
         data_raw = get_post_data(environ['wsgi.input'], env_vars['content_len'])
-        if config.SCRAMBLE_DATA:
-            lines = decode(config.SHARED_KEY, data_raw).split('\n')
-        else:
-            lines = data_raw.split('\n')
+        lines = data_raw.split('\n')
 
         # The first line is ALWAYS 'CHECKSUM', second is 'FQDN'. If it isn't,
         # then we've either received garbage OR garbage. Hard cheese.
