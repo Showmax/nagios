@@ -107,6 +107,7 @@ class NagiosRunit(object):
         self.config_uri = None
         self.environment = DEFAULT_ENVIRONMENT
         self.interval = DEFAULT_INTERVAL
+        self.https_verify = True
         self.results_uri = None
         self.shared_key = None
         self.url = None
@@ -145,6 +146,7 @@ class NagiosRunit(object):
         """Send results to remote Nagios Host."""
         sender = NagiosSender()
         sender.set_command(CMD_GET_RESULTS)
+        sender.set_https_verification(self.https_verify)
         sender.set_url('%s%s' % (self.url, self.results_uri))
         sender.set_shared_key(self.shared_key)
         try:
@@ -169,6 +171,7 @@ class NagiosRunit(object):
 
         sender = NagiosSender()
         sender.set_command(CMD_GET_CONFIG)
+        sender.set_https_verification(self.https_verify)
         sender.set_shared_key(self.shared_key)
         sender.set_url('%s%s' % (self.url, self.config_uri))
         try:
@@ -186,6 +189,13 @@ class NagiosRunit(object):
     def set_environment(self, environment):
         """Set working environment."""
         self.environment = environment
+
+    def set_https_verification(self, verify):
+        """Set HTTPS SSL verification."""
+        if verify:
+            self.https_verify = True
+        else:
+            self.https_verify = False
 
     def set_interval(self, interval):
         """Set interval for sending results."""
@@ -219,6 +229,7 @@ class NagiosSender(object):
         self.url = None
         self.shared_key = None
         self.http_timeout = 15
+        self.https_verify = True
 
     def run(self):
         """Go, go, go!"""
@@ -241,7 +252,7 @@ class NagiosSender(object):
         data += stdin
         headers = {'content-type': 'text/plain'}
         rsp = requests.post(self.url, data=data, headers=headers,
-                            timeout=self.http_timeout)
+                            timeout=self.http_timeout, verify=self.https_verify)
 
         try:
             status_code = int(rsp.status_code)
@@ -278,6 +289,13 @@ class NagiosSender(object):
     def set_command(self, command):
         """Set command to execute - list is expected."""
         self.command = command
+
+    def set_https_verification(self, verify):
+        """Set HTTPS SSL verification."""
+        if verify:
+            self.https_verify = True
+        else:
+            self.https_verify = False
 
     def set_shared_key(self, shared_key):
         """Set shared key for scrambling message."""
@@ -319,12 +337,14 @@ def main():
     if args.action == 'send_config':
         nagios_sender = NagiosSender()
         nagios_sender.set_command(CMD_GET_CONFIG)
+        nagios_sender.set_https_verification(args.ssl_verify)
         nagios_sender.set_shared_key(shared_key)
         nagios_sender.set_url('%s%s' % (nagios_host, config_uri))
         nagios_sender.run()
     elif args.action == 'send_results':
         nagios_sender = NagiosSender()
         nagios_sender.set_command(CMD_GET_RESULTS)
+        nagios_sender.set_https_verification(args.ssl_verify)
         nagios_sender.set_url('%s%s' % (nagios_host, results_uri))
         nagios_sender.set_shared_key(shared_key)
         nagios_sender.run()
@@ -332,6 +352,7 @@ def main():
         nagios_runit = NagiosRunit()
         nagios_runit.set_config_uri(config_uri)
         nagios_runit.set_environment(args.environment)
+        nagios_runit.set_https_verification(args.ssl_verify)
         nagios_runit.set_interval(args.interval)
         nagios_runit.set_results_uri(results_uri)
         nagios_runit.set_shared_key(shared_key)
@@ -353,6 +374,9 @@ def parse_cli_args():
     parser.add_argument('-i',
                         dest='interval', type=int, default=DEFAULT_INTERVAL,
                         help='How often to send check results.')
+    parser.add_argument('--no-check-certificate',
+                        dest='ssl_verify', action='store_false', default=True,
+                        help="Don't check SSL certificate.")
     parser.add_argument('-v',
                         dest='verbose', action='store_true',
                         help='Increase logging verbosity.')
