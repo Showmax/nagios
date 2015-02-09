@@ -231,8 +231,11 @@ class NagiosSender(object):
 
         logging.debug('CMD: %s', self.command)
         logging.debug('Output: %s', repr(stdin))
+
         checksum = hashlib.sha256(stdin).hexdigest()
         data = 'CHECKSUM: %s\n' % (checksum)
+        data += 'KEY: %s\n' % (hashlib.sha256(
+            '%s%s' % (checksum, self.shared_key)).hexdigest())
         data += 'FQDN: %s\n' % (getfqdn())
         data += '---\n'
         data += stdin

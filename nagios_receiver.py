@@ -26,6 +26,7 @@ class HttpError(Exception):
     http_codes = {
         200: 'OK',
         400: 'Bad Request',
+        403: 'Forbidden',
         404: 'Not Found',
         408: 'Request Timeout',
         411: 'Length Required',
@@ -127,11 +128,16 @@ def application(environ, start_response):
 
         # The first line is ALWAYS 'CHECKSUM', second is 'FQDN'. If it isn't,
         # then we've either received garbage OR garbage. Hard cheese.
-        if len(lines) < 3:
-            print "Expected at least 3 lines, parsed %i" % len(lines)
+        if len(lines) < 4:
+            print "Expected at least 4 lines, parsed %i" % len(lines)
             raise HttpError(400)
 
         checksum_cli = lines.pop(0).split(':')[1].lstrip(' ')
+        remote_key = lines.pop(0).split(':')[1].lstrip(' ')
+        if not validate_remote_key(checksum_cli, remote_key):
+            print "Invalid key '%s-%s'." % (checksum_cli, remote_key)
+            raise HttpError(403)
+
         rhost = lines.pop(0).split(':')[1].lstrip(' ')
         # garbage in the first item
         _ = lines.pop(0)
@@ -180,6 +186,15 @@ def save_results(environ, start_response, lines, rhost):
     write_lines_to_file(results_file, lines)
     start_response('200 OK', [('Content-Type', 'plain/text')])
     return ['']
+
+def validate_remote_key(checksum, remote_key):
+    """Validate remote key."""
+    local_key = hashlib.sha256(
+        '%s%s' % (checksum, config.SHARED_KEY)).hexdigest()
+    if remote_key != local_key:
+        return False
+    else:
+        return True
 
 def write_lines_to_file(file_name, lines):
     """Write given lines into given file.
