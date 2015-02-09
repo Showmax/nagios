@@ -146,6 +146,9 @@ def application(environ, start_response):
             print ("Either checksum '%s' or hostname '%s' don't match."
                    % (checksum_srv, rhost))
             raise HttpError(400)
+        elif len(lines) < 1:
+            print "Received empty data."
+            raise HttpError(400)
 
         if config.COMPONENTS[component] == 'config':
             return save_config(environ, start_response, lines, rhost)
