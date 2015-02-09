@@ -128,9 +128,7 @@ Edit '/etc/icinga/nagios.yml' and add desired component, eg. new command or cont
 
 ### Payload obfuscation
 
-Whole payload is being scrambled by Vigenere cipher. This cipher doesn't require any Python library and is easy to use. Of course, it's a rather weak cipher, but it can be replaced by any other cipher.
-
-Reason to scramble data is not only to hide it from prying eyes, but to prove client is "entitled" to communicate with Nagios by knowing shared secret. Of course, it would be more secure to use some asymetric encryption instead and it eventually can be done.
+There is none any more. HTTPS takes care of obfuscation. If you need obfuscation, use appropriate Python library.
 
 ### Message format
 
@@ -138,15 +136,16 @@ Message format is rather simple:
 
 ```shell
 CHECKSUM: $SHA256_OF_DATA
+KEY: $SHA256_OF_CHECKSUM_AND_SHARED_KEY
 FQDN: $FQDN
 ---
 $DATA
 ```
 
 * CHECKSUM - SHA256 checksum of DATA being sent
+* KEY - SHA256 of CHECKSUM and Shared Key
 * FQDN - FQDN of Sender, resp. Node sending data
 * DATA - output from check_multi
-
 
 ### Nagios configuration in YAML, structure of YAML
 
