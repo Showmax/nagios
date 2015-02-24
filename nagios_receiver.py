@@ -18,7 +18,7 @@ import nagios_receiver_config as config
 sys.stdout = sys.stderr
 
 RE_QUERY_STRING = re.compile(r'(?P<query_string>\?.*)$')
-RE_FQDN = re.compile(r'^[a-zA-Z0-9]+[a-zA-Z0-9\.\-\_]+[a-zA-Z]+$')
+RE_FQDN = re.compile(r'^[a-zA-Z0-9]+[a-zA-Z0-9\.\-]+[a-zA-Z]+$')
 
 class HttpError(Exception):
     """Abstraction of HTTP Errors."""
